@@ -52,45 +52,6 @@ METRICS = [
 ]
 
 
-def split_df(df):
-    """User function"""
-    # Prepare the data
-    df = df.loc[(df["EDUCATION"] != 0)]
-    df = df.loc[(df["MARRIAGE"] != 0)]
-    df.loc[df["EDUCATION"] > 4, "EDUCATION"] = 4
-
-    # Split the data
-    selected_columns = [
-        "LIMIT_BAL",
-        "SEX",
-        "EDUCATION",
-        "MARRIAGE",
-        "AGE",
-        "PAY_0",
-        "PAY_2",
-        "PAY_3",
-        "PAY_4",
-        "PAY_5",
-        "PAY_6",
-        "BILL_AMT1",
-        "BILL_AMT2",
-        "BILL_AMT3",
-        "BILL_AMT4",
-        "BILL_AMT5",
-        "BILL_AMT6",
-        "PAY_AMT1",
-        "PAY_AMT2",
-        "PAY_AMT3",
-        "PAY_AMT4",
-        "PAY_AMT5",
-        "PAY_AMT6",
-    ]
-
-    x_df = df[selected_columns]
-    y_df = df["default payment next month"]
-    return x_df, y_df
-
-
 # ------------------------------------------------------------------------------
 #
 # Internal tests
@@ -110,6 +71,23 @@ def _test_components(model):
     current_components = [str(model.estimator[i]) for i in range(len(model.estimator))]
     for component in MODEL_COMPONENTS:
         assert any(component in x for x in current_components)
+
+
+def _load_grading_data():
+    """Load grading data"""
+    with open("files/grading/x_train.pkl", "rb") as file:
+        x_train = pickle.load(file)
+
+    with open("files/grading/y_train.pkl", "rb") as file:
+        y_train = pickle.load(file)
+
+    with open("files/grading/x_test.pkl", "rb") as file:
+        x_test = pickle.load(file)
+
+    with open("files/grading/y_test.pkl", "rb") as file:
+        y_test = pickle.load(file)
+
+    return x_train, y_train, x_test, y_test
 
 
 def _test_scores(model, x_train, y_train, x_test, y_test):
@@ -154,15 +132,9 @@ def test_homework():
     """Tests"""
 
     model = _load_model()
-    _test_components(model)
-
-    train_df = pd.read_csv("files/input/train_data.csv.zip", compression="zip")
-    test_df = pd.read_csv("files/input/test_data.csv.zip", compression="zip")
-
-    x_train, y_train = split_df(train_df)
-    x_test, y_test = split_df(test_df)
-
-    _test_scores(model, x_train, y_train, x_test, y_test)
-
+    x_train, y_train, x_test, y_test = _load_grading_data()
     metrics = _load_metrics()
+
+    _test_components(model)
+    _test_scores(model, x_train, y_train, x_test, y_test)
     _test_metrics(metrics)
